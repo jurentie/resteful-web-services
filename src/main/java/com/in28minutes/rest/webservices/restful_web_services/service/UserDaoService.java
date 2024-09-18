@@ -37,9 +37,9 @@ public class UserDaoService {
     }
 
     public Boolean deleteUserById(int id) {
-        Predicate<? super User> predicate = user -> !user.getId().equals(id);
+        Predicate<? super User> predicate = user -> user.getId().equals(id);
         try{
-            users = users.stream().filter(predicate).collect(Collectors.toList());
+            users.removeIf(predicate);
             return true;
         }catch(Exception e){
             return false;

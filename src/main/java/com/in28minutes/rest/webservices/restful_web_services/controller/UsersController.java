@@ -3,6 +3,7 @@ package com.in28minutes.rest.webservices.restful_web_services.controller;
 import com.in28minutes.rest.webservices.restful_web_services.exception.UserNotFoundException;
 import com.in28minutes.rest.webservices.restful_web_services.model.User;
 import com.in28minutes.rest.webservices.restful_web_services.service.UserDaoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class UsersController {
 
     // POST /users
     @PostMapping("/users")
-    public ResponseEntity<Object> addUsers(@RequestBody User user,
+    public ResponseEntity<Object> addUsers(@Valid @RequestBody User user,
                                             UriComponentsBuilder builder){
         int userId = userDaoService.addUser(user);
         URI location = builder.path("/users/{id}").buildAndExpand(userId).toUri();
