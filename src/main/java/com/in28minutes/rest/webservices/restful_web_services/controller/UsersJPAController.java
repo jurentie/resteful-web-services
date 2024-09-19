@@ -1,8 +1,8 @@
 package com.in28minutes.rest.webservices.restful_web_services.controller;
 
 import com.in28minutes.rest.webservices.restful_web_services.exception.UserNotFoundException;
-import com.in28minutes.rest.webservices.restful_web_services.model.User;
-import com.in28minutes.rest.webservices.restful_web_services.service.UserService;
+import com.in28minutes.rest.webservices.restful_web_services.entity.User;
+import com.in28minutes.rest.webservices.restful_web_services.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
@@ -13,25 +13,27 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
-@RestController
-public class UsersController {
+@RestController()
+@RequestMapping("/jpa")
+public class UsersJPAController {
 
     @Autowired
-    UserService userDaoService;
+    UserRepository userRepository;
 
     // GET /users
     @GetMapping("/users")
     public ResponseEntity<List<User>> getUsers(){
-        return ResponseEntity.ok(userDaoService.findAll());
+        return ResponseEntity.ok(userRepository.findAll());
     }
 
     // POST /users
     @PostMapping("/users")
     public ResponseEntity<Object> addUsers(@Valid @RequestBody User user,
                                             UriComponentsBuilder builder){
-        int userId = userDaoService.addUser(user);
-        URI location = builder.path("/users/{id}").buildAndExpand(userId).toUri();
+        User newUser = userRepository.save(user);
+        URI location = builder.path("/jpa/users/{id}").buildAndExpand(newUser.getId()).toUri();
         return ResponseEntity.created(location).build();
     }
 
@@ -43,13 +45,13 @@ public class UsersController {
     // GET /users/{id}
     @GetMapping("/users/{id}")
     public ResponseEntity<EntityModel<User>> getUserById(@PathVariable("id") int id){
-        User user = userDaoService.getUserById(id);
+        Optional<User> user = userRepository.findById(id);
 
-        if(user == null){
+        if(user.isEmpty()){
             throw new UserNotFoundException(String.format("id: %d not found", id));
         }
 
-        EntityModel<User> entityModel = EntityModel.of(userDaoService.getUserById(id));
+        EntityModel<User> entityModel = EntityModel.of(user.get());
 
         WebMvcLinkBuilder webMvcLinkBuilder = WebMvcLinkBuilder.linkTo(
                 WebMvcLinkBuilder.methodOn((this.getClass())).getUsers()
@@ -63,7 +65,12 @@ public class UsersController {
     // DELETE /users/{id}
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Boolean> deleteUserById(@PathVariable("id") int id){
-        return ResponseEntity.ok(userDaoService.deleteUserById(id));
+        try{
+            userRepository.deleteById(id);
+            return ResponseEntity.ok(true);
+        }catch (Exception e){
+            return ResponseEntity.ok(false);
+        }
     }
 
     // GET /users/{id}/posts

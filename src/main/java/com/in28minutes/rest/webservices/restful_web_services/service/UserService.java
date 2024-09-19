@@ -7,10 +7,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Component
-public class UserDaoService {
+public class UserService {
 
     private static int id = 0;
     private static List<User> users = new ArrayList<>();
