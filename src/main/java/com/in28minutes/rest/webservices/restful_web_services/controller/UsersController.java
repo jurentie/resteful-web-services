@@ -5,10 +5,13 @@ import com.in28minutes.rest.webservices.restful_web_services.model.User;
 import com.in28minutes.rest.webservices.restful_web_services.service.UserDaoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.swing.text.html.parser.Entity;
 import java.net.URI;
 import java.util.List;
 
@@ -33,16 +36,29 @@ public class UsersController {
         return ResponseEntity.created(location).build();
     }
 
+    // add link to http:localhost:8080/users using HATEOAS
+
+    //EntityModel
+    //WebMvcLinkBuilder
+
     // GET /users/{id}
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") int id){
+    public ResponseEntity<EntityModel<User>> getUserById(@PathVariable("id") int id){
         User user = userDaoService.getUserById(id);
 
         if(user == null){
             throw new UserNotFoundException(String.format("id: %d not found", id));
         }
 
-        return ResponseEntity.ok(userDaoService.getUserById(id));
+        EntityModel<User> entityModel = EntityModel.of(userDaoService.getUserById(id));
+
+        WebMvcLinkBuilder webMvcLinkBuilder = WebMvcLinkBuilder.linkTo(
+                WebMvcLinkBuilder.methodOn((this.getClass())).getUsers()
+        );
+
+        entityModel.add(webMvcLinkBuilder.withRel("all-users"));
+
+        return ResponseEntity.ok(entityModel);
     }
 
     // DELETE /users/{id}
